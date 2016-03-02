@@ -5,6 +5,7 @@ origin/*
 results/*
 logfile_*
 *.tgz
+arm-drobo*-linux-gnueabi.tar.*
 
 ### Linux ###
 *~

@@ -2,7 +2,7 @@
 #export KERNEL_VERSION="4.4.1"
 export KERNEL_VERSION="3.2.58"
 export GCC_VERSION="5.3.0"
-export GLIBC_VERSION="2.22"
+export GLIBC_VERSION="2.23"
 
 export HOST="${MACHTYPE}"
 export TARGET="arm-drobo$(uname -m)-linux-gnueabi"
