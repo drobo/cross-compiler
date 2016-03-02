@@ -143,7 +143,8 @@ pushd "target/${FOLDER}-build"
   --enable-kernel="${KERNEL_VERSION}" \
   --disable-multilib \
   libc_cv_forced_unwind=yes \
-  libc_cv_c_cleanup=yes
+  libc_cv_c_cleanup=yes \
+  CFLAGS="-march=armv7-a -mcpu=marvell-pj4 -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2"
 make install-bootstrap-headers=yes install-headers
 make csu/subdir_lib
 install csu/crt1.o csu/crti.o csu/crtn.o "${DEST}/${TARGET}/lib"
