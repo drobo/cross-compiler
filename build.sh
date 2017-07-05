@@ -184,7 +184,7 @@ _package() {
   mkdir -p "${DEST}"
   [[ -d "src/dest" ]] && cp -afR "src/dest"/* "${DEST}"/
   find "${DEST}" -name "._*" -print -delete
-  _create_tgz
+  #_create_tgz
   _create_txz
 }
 

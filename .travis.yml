@@ -5,6 +5,8 @@ os: linux
 
 addons:
   apt:
+    packages:
+    - realpath
     sources:
     - ubuntu-toolchain-r-test
     packages:
@@ -12,7 +14,7 @@ addons:
     - g++-4.8
 
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 script: ./build.sh
 
@@ -22,4 +24,4 @@ after_success: curl -i -X POST -F "file=@$(ls *.tgz)" -F "expire=86400" -F "subm
 
 branches:
   only:
-    - master
+  - master

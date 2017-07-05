@@ -1,18 +1,24 @@
-# 4.4.x is the current LTS
-#export KERNEL_VERSION="4.4.1"
+# 4.11 is the current stable, but we run 3.2.58 on older devices
+export KERNEL_HEADERS="4.11.8"
 export KERNEL_VERSION="3.2.58"
-export GCC_VERSION="5.3.0"
-export GLIBC_VERSION="2.23"
+export GCC_VERSION="6.4.0"
+export GMP_VERSION="6.1.2"
+export MPFR_VERSION="3.1.5"
+export MPC_VERSION="1.0.3"
+export ISL_VERSION="0.18"
+export CLOOG_VERSION="0.18.4"
+export GLIBC_VERSION="2.25"
 
 export HOST="${MACHTYPE}"
-export TARGET="arm-drobo$(uname -m)-linux-gnueabi"
+export TARGET="arm-drobo_$(uname -m)-linux-gnueabi"
 export LC_ALL=POSIX
 export DEST="${HOME}/xtools/toolchain/${TARGET}"
+export DESTROOT="${DEST}/${TARGET}/libc"
 
 ### BINUTILS ###
 # https://www.gnu.org/software/binutils/
 _build_binutils() {
-local VERSION="2.26"
+local VERSION="2.28"
 local FOLDER="binutils-${VERSION}"
 local FILE="${FOLDER}.tar.bz2"
 local URL="http://ftp.gnu.org/gnu/binutils/${FILE}"
@@ -24,7 +30,7 @@ pushd "target/${FOLDER}-build"
 AR=ar AS=as \
   "../${FOLDER}/configure" --prefix="${DEST}" \
     --target="${TARGET}" \
-    --disable-multilib --disable-nls --disable-werror
+    --disable-multilib --disable-werror
 make
 make install
 popd
@@ -33,15 +39,14 @@ popd
 ### KERNEL HEADERS ###
 # https://www.kernel.org/category/releases.html
 _build_kernel_headers() {
-local VERSION="${KERNEL_VERSION}"
+local VERSION="${KERNEL_HEADERS}"
 local FOLDER="linux-${VERSION}"
 local FILE="${FOLDER}.tar.xz"
-local URL="https://cdn.kernel.org/pub/linux/kernel/v3.0/${FILE}"
-#local URL="https://cdn.kernel.org/pub/linux/kernel/v4.x/${FILE}"
+local URL="https://cdn.kernel.org/pub/linux/kernel/v4.x/${FILE}"
 
 _download_xz "${FILE}" "${URL}" "${FOLDER}"
 pushd "target/${FOLDER}"
-make ARCH=arm INSTALL_HDR_PATH="${DEST}/${TARGET}" headers_install
+make headers_install ARCH=arm INSTALL_HDR_PATH="${DESTROOT}/usr"
 popd
 }
 
@@ -55,13 +60,12 @@ popd
 _build_gcc() {
 local VERSION="${GCC_VERSION}"
 local FOLDER="gcc-${VERSION}"
-local FILE="${FOLDER}.tar.bz2"
+local FILE="${FOLDER}.tar.xz"
 local URL="ftp://ftp.fu-berlin.de/unix/languages/gcc/releases/${FOLDER}/${FILE}"
 
-_download_bz2 "${FILE}" "${URL}" "${FOLDER}"
+_download_xz "${FILE}" "${URL}" "${FOLDER}"
 
 ### GMP ###
-local GMP_VERSION="6.1.0"
 local GMP_FOLDER="gmp-${GMP_VERSION}"
 local GMP_FILE="${GMP_FOLDER}.tar.xz"
 local GMP_URL="https://gmplib.org/download/gmp/${GMP_FILE}"
@@ -71,7 +75,6 @@ rm -fr "target/${FOLDER}/gmp"
 mv "target/${GMP_FOLDER}" "target/${FOLDER}/gmp"
 
 ### MPFR ###
-local MPFR_VERSION="3.1.3"
 local MPFR_FOLDER="mpfr-${MPFR_VERSION}"
 local MPFR_FILE="${MPFR_FOLDER}.tar.xz"
 local MPFR_URL="http://www.mpfr.org/mpfr-current/${MPFR_FILE}"
@@ -81,7 +84,6 @@ rm -fr "target/${FOLDER}/mpfr"
 mv "target/${MPFR_FOLDER}" "target/${FOLDER}/mpfr"
 
 ### MPC ###
-local MPC_VERSION="1.0.3"
 local MPC_FOLDER="mpc-${MPC_VERSION}"
 local MPC_FILE="${MPC_FOLDER}.tar.gz"
 local MPC_URL="ftp://ftp.gnu.org/gnu/mpc/${MPC_FILE}"
@@ -91,7 +93,6 @@ rm -fr "target/${FOLDER}/mpc"
 mv "target/${MPC_FOLDER}" "target/${FOLDER}/mpc"
 
 ### ISL ###
-local ISL_VERSION="0.16.1"
 local ISL_FOLDER="isl-${ISL_VERSION}"
 local ISL_FILE="${ISL_FOLDER}.tar.xz"
 local ISL_URL="http://isl.gforge.inria.fr/${ISL_FILE}"
@@ -101,7 +102,6 @@ rm -fr "target/${FOLDER}/isl"
 mv "target/${ISL_FOLDER}" "target/${FOLDER}/isl"
 
 ### CLOOG ###
-local CLOOG_VERSION="0.18.4"
 local CLOOG_FOLDER="cloog-${CLOOG_VERSION}"
 local CLOOG_FILE="${CLOOG_FOLDER}.tar.gz"
 local CLOOG_URL="http://www.bastoul.net/cloog/pages/download/${CLOOG_FILE}"
@@ -115,7 +115,9 @@ mkdir -p "target/${FOLDER}-build"
 pushd "target/${FOLDER}-build"
 "../${FOLDER}/configure" --prefix="${DEST}" \
   --target="${TARGET}" \
-  --enable-languages=c,c++ --disable-multilib
+  --enable-languages=c,c++ --enable-lto \
+  --disable-multilib \
+  --with-sysroot="${DESTROOT}" --with-build-sysroot="${DESTROOT}"
 make all-gcc
 make install-gcc
 popd
@@ -139,9 +141,11 @@ mkdir -p "target/${FOLDER}-build"
 pushd "target/${FOLDER}-build"
 "../${FOLDER}/configure" --prefix="${DEST}/${TARGET}" \
   --build="${HOST}" --host="${TARGET}" --target="${TARGET}" \
-  --with-headers="${DEST}/${TARGET}/include" \
+  --with-headers="${DESTROOT}/usr/include" \
   --enable-kernel="${KERNEL_VERSION}" \
+  --enable-addons --enable-obsolete-rpc \
   --disable-multilib \
+  --with-build-sysroot="${DESTROOT}" \
   libc_cv_forced_unwind=yes \
   libc_cv_c_cleanup=yes \
   CFLAGS="-march=armv7-a -mcpu=marvell-pj4 -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2"
@@ -194,21 +198,21 @@ popd
 
 ### YASM ###
 # http://yasm.tortall.net/
-#_build_yasm() {
-#local VERSION="1.3.0"
-#local FOLDER="yasm-${VERSION}"
-#local FILE="${FOLDER}.tar.gz"
-#local URL="http://www.tortall.net/projects/yasm/releases/${FILE}"
-#
-#_download_tgz "${FILE}" "${URL}" "${FOLDER}"
-#pushd "target/${FOLDER}"
-#./configure --prefix="${DEST}" \
-#  --host="${HOST}" --build="${TARGET}" --program-prefix="${TARGET}-" \
-#  --disable-python --disable-python-bindings
-#make
-#make install
-#popd
-#}
+_build_yasm() {
+local VERSION="1.3.0"
+local FOLDER="yasm-${VERSION}"
+local FILE="${FOLDER}.tar.gz"
+local URL="http://www.tortall.net/projects/yasm/releases/${FILE}"
+
+_download_tgz "${FILE}" "${URL}" "${FOLDER}"
+pushd "target/${FOLDER}"
+./configure --prefix="${DEST}" \
+  --host="${HOST}" --build="${TARGET}" --program-prefix="${TARGET}-" \
+  --disable-python --disable-python-bindings
+make
+make install
+popd
+}
 
 ### BUILD ###
 _build() {
