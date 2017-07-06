@@ -77,7 +77,7 @@ mv "target/${GMP_FOLDER}" "target/${FOLDER}/gmp"
 ### MPFR ###
 local MPFR_FOLDER="mpfr-${MPFR_VERSION}"
 local MPFR_FILE="${MPFR_FOLDER}.tar.xz"
-local MPFR_URL="http://www.mpfr.org/mpfr-current/${MPFR_FILE}"
+local MPFR_URL="http://mpfr.loria.fr/mpfr-current/${MPFR_FILE}"
 
 _download_xz "${MPFR_FILE}" "${MPFR_URL}" "${MPFR_FOLDER}"
 rm -fr "target/${FOLDER}/mpfr"
