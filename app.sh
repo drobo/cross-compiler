@@ -1,7 +1,7 @@
 # 4.11 is the current stable, but we run 3.2.58 on older devices
 export KERNEL_HEADERS="4.11.8"
 export KERNEL_VERSION="3.2.58"
-export GCC_VERSION="6.4.0"
+export GCC_VERSION="6.3.0"
 export GMP_VERSION="6.1.2"
 export MPFR_VERSION="3.1.5"
 export MPC_VERSION="1.0.3"
@@ -60,10 +60,10 @@ popd
 _build_gcc() {
 local VERSION="${GCC_VERSION}"
 local FOLDER="gcc-${VERSION}"
-local FILE="${FOLDER}.tar.xz"
+local FILE="${FOLDER}.tar.bz2"
 local URL="ftp://ftp.fu-berlin.de/unix/languages/gcc/releases/${FOLDER}/${FILE}"
 
-_download_xz "${FILE}" "${URL}" "${FOLDER}"
+_download_bz2 "${FILE}" "${URL}" "${FOLDER}"
 
 ### GMP ###
 local GMP_FOLDER="gmp-${GMP_VERSION}"
