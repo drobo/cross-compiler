@@ -1,7 +1,7 @@
 # 4.11 is the current stable, but we run 3.2.58 on older devices
 export KERNEL_HEADERS="4.11.8"
 export KERNEL_VERSION="3.2.58"
-export GCC_VERSION="6.3.0"
+export GCC_VERSION="6.4.0"
 export GMP_VERSION="6.1.2"
 export MPFR_VERSION="3.1.5"
 export MPC_VERSION="1.0.3"
