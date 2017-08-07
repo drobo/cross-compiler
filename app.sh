@@ -60,7 +60,7 @@ popd
 _build_gcc() {
 local VERSION="${GCC_VERSION}"
 local FOLDER="gcc-${VERSION}"
-local FILE="${FOLDER}.tar.bz2"
+local FILE="${FOLDER}.tar.xz"
 local URL="ftp://ftp.fu-berlin.de/unix/languages/gcc/releases/${FOLDER}/${FILE}"
 
 _download_bz2 "${FILE}" "${URL}" "${FOLDER}"
