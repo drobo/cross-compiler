@@ -214,6 +214,13 @@ make install
 popd
 }
 
+### Additional file and folder fixes to make the toolchain work ###
+_build_fixes() {
+  ln -fs "${TARGET}/include" "${DEST}/include"
+  mv "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"{,.orig}
+  cp "${BUILDDIR}/src/limits.h" "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"
+}
+
 ### BUILD ###
 _build() {
   _build_binutils
@@ -223,5 +230,6 @@ _build() {
   _build_libgcc
   _build_glibc
   _build_libstd
+  _build_fixes
   _package
 }
