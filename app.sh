@@ -13,7 +13,6 @@ export HOST="${MACHTYPE}"
 export TARGET="arm-drobo_$(uname -m)-linux-gnueabi"
 export LC_ALL=POSIX
 export DEST="${HOME}/xtools/toolchain/${TARGET}"
-export DESTROOT="${DEST}/${TARGET}/libc"
 
 ### BINUTILS ###
 # https://www.gnu.org/software/binutils/
@@ -30,7 +29,8 @@ pushd "target/${FOLDER}-build"
 AR=ar AS=as \
   "../${FOLDER}/configure" --prefix="${DEST}" \
     --target="${TARGET}" \
-    --disable-multilib --disable-werror
+    --disable-multilib \
+    --disable-werror
 make
 make install
 popd
@@ -46,7 +46,7 @@ local URL="https://cdn.kernel.org/pub/linux/kernel/v4.x/${FILE}"
 
 _download_xz "${FILE}" "${URL}" "${FOLDER}"
 pushd "target/${FOLDER}"
-make headers_install ARCH=arm INSTALL_HDR_PATH="${DESTROOT}/usr"
+make headers_install ARCH=arm INSTALL_HDR_PATH="${DEST}/${TARGET}/usr"
 popd
 }
 
@@ -117,7 +117,8 @@ pushd "target/${FOLDER}-build"
   --target="${TARGET}" \
   --enable-languages=c,c++ --enable-lto \
   --disable-multilib \
-  --with-sysroot="${DESTROOT}" --with-build-sysroot="${DESTROOT}"
+  --with-sysroot="${DEST}/${TARGET}" \
+  --with-build-sysroot="${DEST}/${TARGET}"
 make all-gcc
 make install-gcc
 popd
@@ -139,17 +140,17 @@ _download_xz "${FILE}" "${URL}" "${FOLDER}"
 rm -fr "target/${FOLDER}-build"
 mkdir -p "target/${FOLDER}-build"
 pushd "target/${FOLDER}-build"
-"../${FOLDER}/configure" --prefix="${DEST}/${TARGET}" \
+"../${FOLDER}/configure" --prefix="" \
   --build="${HOST}" --host="${TARGET}" --target="${TARGET}" \
-  --with-headers="${DESTROOT}/usr/include" \
+  --with-headers="${DEST}/${TARGET}/usr/include" \
   --enable-kernel="${KERNEL_VERSION}" \
-  --enable-addons --enable-obsolete-rpc \
+  --enable-addons \
+  --enable-obsolete-rpc \
   --disable-multilib \
-  --with-build-sysroot="${DESTROOT}" \
   libc_cv_forced_unwind=yes \
   libc_cv_c_cleanup=yes \
   CFLAGS="-march=armv7-a -mcpu=marvell-pj4 -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2"
-make install-bootstrap-headers=yes install-headers
+make install-bootstrap-headers=yes install-headers DESTDIR="${DEST}/${TARGET}"
 make csu/subdir_lib
 install csu/crt1.o csu/crti.o csu/crtn.o "${DEST}/${TARGET}/lib"
 "${DEST}/bin/${TARGET}-gcc" -nostdlib -nostartfiles -shared -x c /dev/null -o "${DEST}/${TARGET}/lib/libc.so"
@@ -180,7 +181,7 @@ PATH="${DEST}/bin:${PATH}"
 
 pushd "target/${FOLDER}-build"
 make
-make install
+make install DESTDIR="${DEST}/${TARGET}"
 popd
 }
 
@@ -216,6 +217,7 @@ popd
 
 ### Additional file and folder fixes to make the toolchain work ###
 _build_fixes() {
+  rmdir "${DEST}/include"
   ln -fs "${TARGET}/include" "${DEST}/include"
   mv "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"{,.orig}
   cp "${BUILDDIR}/src/limits.h" "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"
