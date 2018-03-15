@@ -1,5 +1,5 @@
 # 4.11 is the current stable, but we run 3.2.58 on older devices
-export KERNEL_HEADERS="4.11.8"
+export KERNEL_HEADERS="3.2.96"
 export KERNEL_VERSION="3.2.58"
 export GCC_VERSION="6.4.0"
 export GMP_VERSION="6.1.2"
@@ -42,7 +42,7 @@ _build_kernel_headers() {
 local VERSION="${KERNEL_HEADERS}"
 local FOLDER="linux-${VERSION}"
 local FILE="${FOLDER}.tar.xz"
-local URL="https://cdn.kernel.org/pub/linux/kernel/v4.x/${FILE}"
+local URL="https://cdn.kernel.org/pub/linux/kernel/v3.x/${FILE}"
 
 _download_xz "${FILE}" "${URL}" "${FOLDER}"
 pushd "target/${FOLDER}"
