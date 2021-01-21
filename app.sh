@@ -1,23 +1,23 @@
-# 4.11 is the current stable, but we run 3.2.58 on older devices
-export KERNEL_HEADERS="3.2.96"
-export KERNEL_VERSION="3.2.58"
-export GCC_VERSION="6.4.0"
-export GMP_VERSION="6.1.2"
-export MPFR_VERSION="3.1.6"
-export MPC_VERSION="1.0.3"
-export ISL_VERSION="0.18"
+# 5.10 is the current stable, but we run 3.2.58 on older devices
+export KERNEL_HEADERS="5.10.8"
+export KERNEL_VERSION="5.10.8"
+export GCC_VERSION="10.2.0"
+export GMP_VERSION="6.2.1"
+export MPFR_VERSION="4.1.0"
+export MPC_VERSION="1.2.1"
+export ISL_VERSION="0.23"
 export CLOOG_VERSION="0.18.4"
-export GLIBC_VERSION="2.25"
+export GLIBC_VERSION="2.32"
 
 export HOST="${MACHTYPE}"
-export TARGET="arm-drobo_$(uname -m)-linux-gnueabi"
+export TARGET="arm-drobo_$(uname -m)-linux-gnueabihf"
 export LC_ALL=POSIX
 export DEST="${HOME}/xtools/toolchain/${TARGET}"
 
 ### BINUTILS ###
 # https://www.gnu.org/software/binutils/
 _build_binutils() {
-local VERSION="2.28"
+local VERSION="2.35"
 local FOLDER="binutils-${VERSION}"
 local FILE="${FOLDER}.tar.bz2"
 local URL="http://ftp.gnu.org/gnu/binutils/${FILE}"
@@ -29,6 +29,8 @@ pushd "target/${FOLDER}-build"
 AR=ar AS=as \
   "../${FOLDER}/configure" --prefix="${DEST}" \
     --target="${TARGET}" \
+    --enable-gold=yes \
+    --enable-ld=default \
     --disable-multilib \
     --disable-werror
 make
@@ -42,7 +44,7 @@ _build_kernel_headers() {
 local VERSION="${KERNEL_HEADERS}"
 local FOLDER="linux-${VERSION}"
 local FILE="${FOLDER}.tar.xz"
-local URL="https://cdn.kernel.org/pub/linux/kernel/v3.x/${FILE}"
+local URL="https://cdn.kernel.org/pub/linux/kernel/v5.x/${FILE}"
 
 _download_xz "${FILE}" "${URL}" "${FOLDER}"
 pushd "target/${FOLDER}"
@@ -64,6 +66,10 @@ local FILE="${FOLDER}.tar.xz"
 local URL="ftp://ftp.fu-berlin.de/unix/languages/gcc/releases/${FOLDER}/${FILE}"
 
 _download_xz "${FILE}" "${URL}" "${FOLDER}"
+cp -f src/asan_linux.cpp.patch "target/${FOLDER}/"
+pushd "target/${FOLDER}"
+patch -p1 -i asan_linux.cpp.patch
+popd
 
 ### GMP ###
 local GMP_FOLDER="gmp-${GMP_VERSION}"
@@ -77,7 +83,7 @@ mv "target/${GMP_FOLDER}" "target/${FOLDER}/gmp"
 ### MPFR ###
 local MPFR_FOLDER="mpfr-${MPFR_VERSION}"
 local MPFR_FILE="${MPFR_FOLDER}.tar.xz"
-local MPFR_URL="http://mpfr.loria.fr/${MPFR_FOLDER}/${MPFR_FILE}"
+local MPFR_URL="http://www.mpfr.org/mpfr-current/${MPFR_FILE}"
 
 _download_xz "${MPFR_FILE}" "${MPFR_URL}" "${MPFR_FOLDER}"
 rm -fr "target/${FOLDER}/mpfr"
@@ -115,7 +121,12 @@ mkdir -p "target/${FOLDER}-build"
 pushd "target/${FOLDER}-build"
 "../${FOLDER}/configure" --prefix="${DEST}" \
   --target="${TARGET}" \
-  --enable-languages=c,c++ --enable-lto \
+  --with-arch=armv7-a+mp+fp \
+  --with-tune=marvell-pj4 \
+  --with-fpu=vfpv3-d16 \
+  --with-float=hard \
+  --enable-languages=c,c++ \
+  --enable-lto \
   --disable-multilib \
   --with-sysroot="${DEST}/${TARGET}" \
   --with-build-sysroot="${DEST}/${TARGET}"
@@ -148,8 +159,7 @@ pushd "target/${FOLDER}-build"
   --enable-obsolete-rpc \
   --disable-multilib \
   libc_cv_forced_unwind=yes \
-  libc_cv_c_cleanup=yes \
-  CFLAGS="-march=armv7-a -mcpu=marvell-pj4 -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2"
+  libc_cv_c_cleanup=yes
 make install-bootstrap-headers=yes install-headers DESTDIR="${DEST}/${TARGET}"
 make csu/subdir_lib
 install csu/crt1.o csu/crti.o csu/crtn.o "${DEST}/${TARGET}/lib"
@@ -219,8 +229,6 @@ popd
 _build_fixes() {
   rmdir "${DEST}/include"
   ln -fs "${TARGET}/include" "${DEST}/include"
-  mv "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"{,.orig}
-  cp "${BUILDDIR}/src/limits.h" "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"
 }
 
 ### BUILD ###

@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:20.04
 
 MAINTAINER ricardo@droboports.com
 
@@ -8,7 +8,7 @@ ENV GROUP_ID 1000
 RUN set -x; \
     apt-get -y update && \
     apt-get -y upgrade && \
-    apt-get -y install build-essential realpath wget gawk && \
+    apt-get -y install build-essential bison python3 wget gawk rsync && \
     apt-get clean && \
     apt-get autoclean
 

@@ -1,0 +1,12 @@
+--- a/libsanitizer/asan/asan_linux.cpp	2021-01-19 05:48:02.001760790 +0000
++++ b/libsanitizer/asan/asan_linux.cpp	2021-01-19 05:48:17.729760694 +0000
+@@ -214,6 +214,9 @@
+       // the functions in dynamic ASan runtime instead of the functions in
+       // system libraries, causing crashes later in ASan initialization.
+       MemoryMappingLayout proc_maps(/*cache_enabled*/true);
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
+       char filename[PATH_MAX];
+       MemoryMappedSegment segment(filename, sizeof(filename));
+       while (proc_maps.Next(&segment)) {

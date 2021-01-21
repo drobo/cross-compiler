@@ -12,7 +12,7 @@ shopt -s expand_aliases
 # print trace
 set -o xtrace
 
-export BUILDDIR="$(dirname "$(realpath "$0")")"
+export BUILDDIR="$(dirname "$(readlink -f -- "$0")")"
 pushd "${BUILDDIR}"
 
 ### logfile ###
@@ -175,7 +175,7 @@ _create_txz() {
   fi
 
   pushd "${DEST}"
-  tar --verbose --create --numeric-owner --owner=0 --group=0 --xz --file "${FILE}" *
+  tar --verbose --create --numeric-owner --owner=0 --group=0 --use-compress-program="xz --threads=0" --file "${FILE}" *
   popd
 }
 
