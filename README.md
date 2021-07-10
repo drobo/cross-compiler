@@ -4,18 +4,18 @@ These scripts will build a cross-compiler toolchain for the Drobo ARM devices
 which will be 32 or 64-bit based on the build machine.
 
 A 32-bit build machine will result in a toolchain with the prefix
-`arm-drobo_i686-linux-gnueabi`.
+`arm-drobo_i686-linux-gnueabihf`.
 
 A 64-bit build machine will result in a toolchain with the prefix
-`arm-drobo_x86_64-linux-gnueabi`.
+`arm-drobo_x86_64-linux-gnueabihf`.
 
 DroboApp scripts can abstract the build machine platform by using
-`arm-drobo_$(uname -m)-linux-gnueabi`.
+`arm-drobo_$(uname -m)-linux-gnueabihf`.
 
 The cross-compiler default install location is
-`/home/drobo/xtools/toolchain/arm-drobo_$(uname -m)-linux-gnueabi`.
+`/home/drobo/xtools/toolchain/arm-drobo_$(uname -m)-linux-gnueabihf`.
 
-Please look at the [releases page](https://github.com/droboports/cross-compiler/releases)
+Please look at the [releases page](https://github.com/drobo/cross-compiler/releases)
 for ready-to-use downloads.
 
 ## How to build the cross-compiler toolchain
@@ -23,12 +23,19 @@ for ready-to-use downloads.
 - Have a machine with Docker installed
 - Clone this repository locally
 - Build the Docker cross-compiler builder container:
-  `docker build -t droboports/compiler_builder ./src/Dockerfile`
+  `./docker-build-builder.sh`
 - Use the Docker container to build the cross-compiler toolchain:
-  `docker run --rm -ti -v $PWD:/home/drobo/build/compiler droboports/compiler_builder /home/drobo/build/compiler/build.sh`
+  `./docker-build.sh`
 
-There will be a file called `arm-drobo_i686-linux-gnueabi.tar.xz`
-or `arm-drobo_x86_64-linux-gnueabi.tar.xz` in the same folder.
+There will be a file called `arm-drobo_i686-linux-gnueabihf.tar.xz`
+or `arm-drobo_x86_64-linux-gnueabihf.tar.xz` in the same folder.
+
+## How to test that the cross-compiler limits.h is ok
+
+Run this command:
+`echo -e "#include <limits.h>\n_POSIX_PATH_MAX" | ~/xtools/toolchain/arm-drobo_x86_64-linux-gnueabihf/bin/arm-drobo_x86_64-linux-gnueabihf-gcc - -E -P`
+
+If it worked it will output `256`, if not it will output `_POSIX_PATH_MAX`.
 
 ## References
 

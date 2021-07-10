@@ -8,7 +8,7 @@ ENV GROUP_ID 1000
 RUN set -x; \
     apt-get -y update && \
     apt-get -y upgrade && \
-    apt-get -y install build-essential bison python3 wget gawk rsync && \
+    apt-get -y install build-essential bison realpath wget gawk && \
     apt-get clean && \
     apt-get autoclean
 

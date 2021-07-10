@@ -1,6 +1,27 @@
-/* This administrivia gets added to the beginning of limits.h
-   if the system has its own version of limits.h.  */
+/* Copyright (C) 1991-2020 Free Software Foundation, Inc.
 
+This file is part of GCC.
+
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 3, or (at your option) any later
+version.
+
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+Under Section 7 of GPL version 3, you are granted additional
+permissions described in the GCC Runtime Library Exception, version
+3.1, as published by the Free Software Foundation.
+
+You should have received a copy of the GNU General Public License and
+a copy of the GCC Runtime Library Exception along with this program;
+see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<http://www.gnu.org/licenses/>.  */
+
+/* --- Fix for Drobo cross-compiler begin part 1 --- */
 /* We use _GCC_LIMITS_H_ because we want this not to match
    any macros that the system's limits.h uses for its own purposes.  */
 #ifndef _GCC_LIMITS_H_  /* Terminated in limity.h.  */
@@ -10,6 +31,8 @@
 /* Use "..." so that we find syslimits.h only in this same directory.  */
 #include "syslimits.h"
 #endif
+/* --- Fix for Drobo cross-compiler end part 1 --- */
+
 #ifndef _LIMITS_H___
 #define _LIMITS_H___
 
@@ -112,7 +135,36 @@
 # define ULONG_LONG_MAX (LONG_LONG_MAX * 2ULL + 1ULL)
 #endif
 
+#if (defined __STDC_WANT_IEC_60559_BFP_EXT__ \
+     || (defined (__STDC_VERSION__) && __STDC_VERSION__ > 201710L))
+/* TS 18661-1 / C2X widths of integer types.  */
+# undef CHAR_WIDTH
+# define CHAR_WIDTH __SCHAR_WIDTH__
+# undef SCHAR_WIDTH
+# define SCHAR_WIDTH __SCHAR_WIDTH__
+# undef UCHAR_WIDTH
+# define UCHAR_WIDTH __SCHAR_WIDTH__
+# undef SHRT_WIDTH
+# define SHRT_WIDTH __SHRT_WIDTH__
+# undef USHRT_WIDTH
+# define USHRT_WIDTH __SHRT_WIDTH__
+# undef INT_WIDTH
+# define INT_WIDTH __INT_WIDTH__
+# undef UINT_WIDTH
+# define UINT_WIDTH __INT_WIDTH__
+# undef LONG_WIDTH
+# define LONG_WIDTH __LONG_WIDTH__
+# undef ULONG_WIDTH
+# define ULONG_WIDTH __LONG_WIDTH__
+# undef LLONG_WIDTH
+# define LLONG_WIDTH __LONG_LONG_WIDTH__
+# undef ULLONG_WIDTH
+# define ULLONG_WIDTH __LONG_LONG_WIDTH__
+#endif
+
 #endif /* _LIMITS_H___ */
+
+/* --- Fix for Drobo cross-compiler begin part 2 --- */
 /* This administrivia gets added to the end of limits.h
    if the system has its own version of limits.h.  */
 
@@ -123,3 +175,4 @@
 #endif
 
 #endif /* not _GCC_LIMITS_H_ */
+/* --- Fix for Drobo cross-compiler end part 2 --- */

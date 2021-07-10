@@ -1,6 +1,6 @@
-# 5.10 is the current stable, but we run 3.2.58 on older devices
-export KERNEL_HEADERS="5.10.8"
-export KERNEL_VERSION="5.10.8"
+# 5.10 is the current LTS, but we run 3.2.96 on older devices
+export KERNEL_HEADERS="5.10.25"
+export KERNEL_VERSION="3.2.96"
 export GCC_VERSION="10.2.0"
 export GMP_VERSION="6.2.1"
 export MPFR_VERSION="4.1.0"
@@ -121,13 +121,12 @@ mkdir -p "target/${FOLDER}-build"
 pushd "target/${FOLDER}-build"
 "../${FOLDER}/configure" --prefix="${DEST}" \
   --target="${TARGET}" \
-  --with-arch=armv7-a+mp+fp \
-  --with-tune=marvell-pj4 \
-  --with-fpu=vfpv3-d16 \
+  --with-arch=armv7-a+mp+sec+fp \
   --with-float=hard \
   --enable-languages=c,c++ \
   --enable-lto \
   --disable-multilib \
+  --disable-libsanitizer \
   --with-sysroot="${DEST}/${TARGET}" \
   --with-build-sysroot="${DEST}/${TARGET}"
 make all-gcc
@@ -156,7 +155,6 @@ pushd "target/${FOLDER}-build"
   --with-headers="${DEST}/${TARGET}/usr/include" \
   --enable-kernel="${KERNEL_VERSION}" \
   --enable-addons \
-  --enable-obsolete-rpc \
   --disable-multilib \
   libc_cv_forced_unwind=yes \
   libc_cv_c_cleanup=yes
@@ -185,6 +183,12 @@ popd
 _build_glibc() {
 local VERSION="${GLIBC_VERSION}"
 local FOLDER="glibc-${VERSION}"
+
+# If NOHL is set, use hardlink workaround
+if [ -n "${NOHL:-}" ]; then
+  _workaround_hardlinks
+  export LD_PRELOAD="${BUILDDIR}/target/symlink_only.so"
+fi
 
 # use the cross-compiler
 PATH="${DEST}/bin:${PATH}"
@@ -229,6 +233,26 @@ popd
 _build_fixes() {
   rmdir "${DEST}/include"
   ln -fs "${TARGET}/include" "${DEST}/include"
+  mv "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"{,.orig}
+  cp "${BUILDDIR}/src/limits.h" "${DEST}/lib/gcc/${TARGET}/${GCC_VERSION}/include-fixed/limits.h"
+  ln -fs "lib" "${DEST}/${TARGET}/libhf"
+}
+
+### Workaround to allow builds on filesystems that do not support hardlinks
+### USE ONLY FOR TESTING!
+_workaround_hardlinks() {
+cat <<'EOF' >"${BUILDDIR}/target/symlink_only.c"
+#include <unistd.h>
+int link(const char *path1, const char *path2)
+{
+    return symlink(path1, path2);
+}
+int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags)
+{
+    return symlink(oldpath, newpath);
+}
+EOF
+gcc -Wall -fPIC -shared -o "${BUILDDIR}/target/symlink_only.so" "${BUILDDIR}/target/symlink_only.c" -ldl
 }
 
 ### BUILD ###
