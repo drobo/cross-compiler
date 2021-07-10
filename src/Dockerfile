@@ -6,7 +6,7 @@ ENV GROUP_ID 1000
 RUN set -x; \
     apt-get -y update && \
     apt-get -y upgrade && \
-    apt-get -y install build-essential bison wget gawk && \
+    apt-get -y install build-essential bison wget gawk rsync && \
     apt-get clean && \
     apt-get autoclean
 
